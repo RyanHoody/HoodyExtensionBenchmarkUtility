@@ -1,110 +1,209 @@
-// // function get() { getTime() }
+chrome.alarms.create({ periodInMinutes: 4.5 })
+chrome.alarms.onAlarm.addListener(() => console.log(`Keep alive alarm listener: ${Math.random() + Math.random()}`))
+
+// try to keep alive with history change listener
+chrome.webNavigation.onHistoryStateUpdated.addListener(() => console.log(`Keep alive history change listener: ${Math.random() + Math.random()}`))
+const TEST_TIME = .1 * 60 * 1000; // 1 minute
+const TAB_COUNT = 5;
+const TestStartTime = Date.now();
+
+const results = {
+    totalMessages: 0,
+    averageTwoWayTime: 0,
+    averageBackgroundToContentTime: 0,
+    averageContentToBackgroundTime: 0
+};
+
+function calculateResults() {
+    let totalTwoWayTime = 0;
+    let totalBackgroundToContentTime = 0;
+    let totalContentToBackgroundTime = 0;
+    console.log(tabMap.values());
+    for (let tabMessages of tabMap.values()) {
+        results.totalMessages += tabMessages.length;
+        for (let message of tabMessages) {
+            totalTwoWayTime += message.twoWayTime;
+            totalBackgroundToContentTime += message.backgroundToContentTime;
+            totalContentToBackgroundTime += message.contentToBackgroundTime;
+        }
+    }
+    results.averageTwoWayTime = totalTwoWayTime / results.totalMessages;
+    results.averageBackgroundToContentTime =
+        totalBackgroundToContentTime / results.totalMessages;
+    results.averageContentToBackgroundTime =
+        totalContentToBackgroundTime / results.totalMessages;
+}
+
+const tabMap = new Map();
+const tabPorts = {};
+
+const htmlFilePath =
+    "file://C:\\Users\\Administrator\\Desktop\\bench\\HoodyExtensionBenchmarkUtility\\index.html";
+
+chrome.tabs.create({ url: htmlFilePath }, async tab => {
+    const tabPromises = [];
+    for (let i = 0; i < TAB_COUNT; i++) {
+        tabPromises.push(
+            new Promise(resolve => {
+                chrome.tabs.create({ url: htmlFilePath }, async (tab) => {
+                    tabMap.set(tab.id, []);
+                    const tabLoaded = await Promise.race([
+                        new Promise(resolve => {
+                            const CompleteListener = function (tabId, changeInfo) {
+                                // make sure the status is 'complete' and it's the right tab
+                                if (tabId == tab.id && changeInfo.status == 'complete') {
+                                    chrome.tabs.onUpdated.removeListener(CompleteListener)
+                                    resolve(true)
+                                }
+                            }
+                            chrome.tabs.onUpdated.addListener(CompleteListener)
+                        }),
+                        new Promise(resolve =>
+                            setTimeout(() => resolve(false), 1_000)
+                        )
+                    ])
+                    beginTest(tab.id).then(() => {
+                        resolve();
+                    });
+                });
+            })
+        );
+    }
+    await Promise.all(tabPromises);
+    calculateResults();
+    for (let port of Object.values(tabPorts))
+        port.postMessage({ message: 'results', summary: results, data: [...tabMap.values()] })
+    console.log(results)
+});
+
+async function beginTest(tabId) {
+    const port = chrome.tabs.connect(tabId, { name: "benchmark" });
+    tabPorts[tabId] = port
+    const messages = []
+    while (Date.now() < TestStartTime + TEST_TIME) {
+        const startTime = Date.now();
+        const contentTime = await new Promise(resolve => {
+
+            port.postMessage({ message: 'test' });
+            port.onMessage.addListener(message => {
+                if (message && message.hasOwnProperty("message")) {
+                    resolve(message.message);
+                }
+            });
+        });
+        const endTime = Date.now();
+        const backgroundToContentTime = contentTime - startTime;
+        const contentToBackgroundTime = endTime - contentTime;
+        const twoWayTime = endTime - startTime;
+        messages.push({ backgroundToContentTime, contentToBackgroundTime, twoWayTime });
+    }
+    tabMap.get(tabId).push(...messages);
+    // port.disconnect();
+}
 
 
-// // // Background Script
 
-// // async function benchmark() {
-// //     const res = await chrome.tabs.executeScript({
-// //         func: get
-// //     }, function (results) {
-// //         return results
-// //     });
-// // }
+// chrome.alarms.create({ periodInMinutes: 4.5 })
+// chrome.alarms.onAlarm.addListener(() => console.log(`Keep alive alarm listener: ${Math.random() + Math.random()}`))
+
+// // try to keep alive with history change listener
+// chrome.webNavigation.onHistoryStateUpdated.addListener(() => console.log(`Keep alive history change listener: ${Math.random() + Math.random()}`))
+// const TEST_TIME = .1 * 60 * 1000; // 1 minute
+// const TAB_COUNT = 5;
+// const TestStartTime = Date.now();
+
+// const results = {
+//     totalMessages: 0,
+//     averageTwoWayTime: 0,
+//     averageBackgroundToContentTime: 0,
+//     averageContentToBackgroundTime: 0
+// };
+
+// function calculateResults() {
+//     let totalTwoWayTime = 0;
+//     let totalBackgroundToContentTime = 0;
+//     let totalContentToBackgroundTime = 0;
+//     console.log(tabMap.values());
+//     for (let tabMessages of tabMap.values()) {
+//         results.totalMessages += tabMessages.length;
+//         for (let message of tabMessages) {
+//             totalTwoWayTime += message.twoWayTime;
+//             totalBackgroundToContentTime += message.backgroundToContentTime;
+//             totalContentToBackgroundTime += message.contentToBackgroundTime;
+//         }
+//     }
+//     results.averageTwoWayTime = totalTwoWayTime / results.totalMessages;
+//     results.averageBackgroundToContentTime =
+//         totalBackgroundToContentTime / results.totalMessages;
+//     results.averageContentToBackgroundTime =
+//         totalContentToBackgroundTime / results.totalMessages;
+// }
 
 // const tabMap = new Map();
+// const tabPorts = {};
 
-// async function sendMessage(tabId) {
-//   const port = chrome.tabs.connect(tabId);
+// const htmlFilePath =
+//     "file://C:\\Users\\Administrator\\Desktop\\bench\\HoodyExtensionBenchmarkUtility\\index.html";
 
-//   for (let i = 0; i < 5; i++) {
-//     const startTime = performance.now();
-//     const contentTime = await new Promise((resolve) => {
-//       port.postMessage({ message: i });
-//       port.onMessage.addListener((message) => {
-//         resolve(message);
-//       });
-//     });
-//     const endTime = performance.now();
-//     const backgroundToContentTime = contentTime - startTime
-//     const contentToBackgroundTime = endTime - contentTime
-//     const timeDiff = endTime - startTime;
-
-//     if (!tabMap.has(tabId)) {
-//       tabMap.set(tabId, []);
+// chrome.tabs.create({ url: htmlFilePath }, async tab => {
+//     const tabPromises = [];
+//     for (let i = 0; i < TAB_COUNT; i++) {
+//         tabPromises.push(
+//             new Promise(resolve => {
+//                 chrome.tabs.create({ url: htmlFilePath }, async (tab) => {
+//                     tabMap.set(tab.id, []);
+//                     const tabLoaded = await Promise.race([
+//                         new Promise(resolve => {
+//                             const CompleteListener = function (tabId, changeInfo) {
+//                                 // make sure the status is 'complete' and it's the right tab
+//                                 if (tabId == tab.id && changeInfo.status == 'complete') {
+//                                     chrome.tabs.onUpdated.removeListener(CompleteListener)
+//                                     resolve(true)
+//                                 }
+//                             }
+//                             chrome.tabs.onUpdated.addListener(CompleteListener)
+//                         }),
+//                         new Promise(resolve =>
+//                             setTimeout(() => resolve(false), 1_000)
+//                         )
+//                     ])
+//                     beginTest(tab.id).then(() => {
+//                         resolve();
+//                     });
+//                 });
+//             })
+//         );
 //     }
+//     await Promise.all(tabPromises);
+//     calculateResults();
+//     for (let port of Object.values(tabPorts))
+//         port.postMessage({ message: 'results', data: results, rawData: [...tabMap.values()] })
+//     // for (let [id, port] of Object.entries(tabPorts))
+//     //     port.postMessage({ message: 'results', data: results, rawData: tabMap.get(id) })
+//     console.log(results)
+// });
 
-//     tabMap.get(tabId).push(timeDiff);
-//   }
+// async function beginTest(tabId) {
+//     const port = chrome.tabs.connect(tabId, { name: "benchmark" });
+//     tabPorts[tabId] = port
+//     const messages = []
+//     while (Date.now() < TestStartTime + TEST_TIME) {
+//         const startTime = Date.now();
+//         const contentTime = await new Promise(resolve => {
 
-//   port.disconnect();
-// }
-
-// chrome.tabs.create({ url: "about:blank" }, async (tab) => {
-//   for (let i = 0; i < 10; i++) {
-//     await new Promise((resolve) => {
-//       chrome.tabs.create({ url: "about:blank" }, (tab) => {
-//         sendMessage(tab.id).then(() => {
-//           resolve();
+//             port.postMessage({ message: 'test' });
+//             port.onMessage.addListener(message => {
+//                 if (message && message.hasOwnProperty("message")) {
+//                     resolve(message.message);
+//                 }
+//             });
 //         });
-//       });
-//     });
-//   }
-// });
-
-// chrome.runtime.onConnect.addListener((port) => {
-//   port.onMessage.addListener((message) => {
-//     port.postMessage({ message: performance.now() });
-//   });
-// });
-// This script creates 10 new tabs and opens a message channel with each of them using chrome.tabs.connect(). The sendMessage function sends 5 messages to each tab and calculates the time it took to send and receive each message. The results are saved in a Map object tabMap where the key is the tab ID and the value is an array of the response times for each message. Finally, you can calculate the average response time for each tab by dividing the sum of the response times by the number of messages sent.
-
-
-
-
-// R D
-// now write a nodejs script that uses playwright to inject the extension into a chrome browser
-// Here is an example of a Node.js script that uses Playwright to inject a Chrome extension into a Chrome browser:
-
-// javascript
-// Copy code
-// const playwright = require("playwright");
-
-// async function run() {
-//   const browser = await playwright.chromium.launch({ headless: false });
-//   const context = await browser.newContext();
-//   const page = await context.newPage();
-
-//   // Inject the extension into the browser
-//   await context.addExtension(pathToExtension);
-
-//   // Perform actions with the browser, such as navigating to a website, etc.
-//   await page.goto("https://www.example.com");
-
-//   await browser.close();
+//         const endTime = Date.now();
+//         const backgroundToContentTime = contentTime - startTime;
+//         const contentToBackgroundTime = endTime - contentTime;
+//         const twoWayTime = endTime - startTime;
+//         messages.push({ backgroundToContentTime, contentToBackgroundTime, twoWayTime });
+//     }
+//     tabMap.get(tabId).push(...messages);
+//     // port.disconnect();
 // }
-
-// run();
-// Replace pathToExtension with the path to your Chrome extension's .crx file or the directory containing the extension's files.
-
-// In this example, Playwright launches a non-headless instance of the Chrome browser and creates a new context with a new page. The addExtension method is then used to inject the extension into the browser. Finally, the script performs actions with the browser, such as navigating to a website, using the goto method of the page object.
-
-
-
-
-// R D
-// how do i create a .crx file for my extension?
-// A Chrome extension can be packaged as a .crx file to be distributed and installed. Here are the steps to create a .crx file for your Chrome extension:
-
-// Go to chrome://extensions in your Chrome browser.
-// Make sure "Developer mode" is turned on. You can do this by clicking the toggle switch in the top right corner of the page.
-// Click the "Pack extension" button.
-// In the "Extension root directory" field, select the directory that contains your extension's files.
-// (Optional) If you want to include a private key to sign the extension, enter the path to the key file in the "Private key file" field.
-// Click the "Pack extension" button.
-// The .crx file will be created and saved to the directory you specified.
-// Note that it is recommended to sign your extension before distributing it, as signed extensions have a higher level of trust in the Chrome Web Store.
-
-; (async function () {
-    console.log('background')
-})()
-

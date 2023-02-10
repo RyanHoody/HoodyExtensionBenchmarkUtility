@@ -1,11 +1,11 @@
 {
-    "name": "Fresh Chrome Extension",
+    "name": "Hoody Benchmark",
     "description": "Benchmark test",
     "version": "1.0.0",
     "manifest_version": 3,
     "content_scripts": [
         {
-            "run_at": "document_idle",
+            "run_at": "document_start",
             "js": [
                 "content.js"
             ],

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <style>
+        canvas {
+            width: 800px;
+            height: 500px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <body>
+        <h1>RESULTS</h1>
+        <p id="results"></p>
+        <canvas id="myChart"></canvas>
+        <script>
+            function getRandomColor() {
+                var letters = '0123456789ABCDEF';
+                var color = '#';
+                for (var i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            window.addEventListener('message', function (event) {
+                if (event.data.type === 'FROM_CONTENT_SCRIPT') {
+                    var data = event.data.data;
+                    console.log(data);
+                    document.getElementById('results').textContent = JSON.stringify(event.data.summary)
+
+                    var ctx = document.getElementById('myChart').getContext('2d');
+                    var chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: []
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    ticks: {
+                                        beginAtZero: true,
+                                        suggestedMax: 10
+                                    }
+                                }]
+                            }
+                        }
+                    });
+
+                    data.forEach(function (dataset) {
+                        var twoWayTime = [];
+                        var labels = [];
+
+                        for (var i = 0; i < dataset.length; i++) {
+                            twoWayTime.push(dataset[i].twoWayTime);
+                            labels.push(i);
+                        }
+
+                        chart.data.datasets.push({
+                            label: 'Two-way Connection Speed',
+                            backgroundColor: getRandomColor(),
+                            borderColor: '#00000000',
+                            data: twoWayTime
+                        });
+
+                        chart.data.labels = labels;
+                        chart.update();
+                    });
+                }
+            });
+        </script>
+    </body>
+
+</html>
+</body>
+
+</html>

@@ -3,6 +3,7 @@ const path = require('path')
 
 const pathToExtension = path.join(__dirname, 'dest')
 const userDataDir = path.join(__dirname, 'userDataDir')
+const htmlFilePath = 'file://' + path.join(__dirname, 'index.html')
 
 async function run() {
     const context = await playwright.chromium.launchPersistentContext(userDataDir, { 
@@ -43,11 +44,7 @@ async function run() {
             ]
     });
     const page = await context.newPage();
-
-    // Perform actions with the browser, such as navigating to a website, etc.
-    await page.goto("https://www.example.com");
-
-    //   await browser.close();
+    await page.goto(htmlFilePath);
 }
 
 run();

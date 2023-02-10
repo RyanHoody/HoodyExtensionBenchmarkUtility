@@ -9,13 +9,14 @@ oneway from contentscript
 
 
 
-
 when running tests keep devtools closed because it allocates more resources to extension
 
 extension should open 10 tabs and communicate between them
 
 each extension should only send messages in one of these ways
 test ports vs scripting API vs websockets(if possible to setup), vs regular broadcast channel?
+TODO:
+Also should test the connection being initiated by the background script vs by the content script
 
 benchamrk total messages sent and recieveing in a minute
 benchmark average response time
@@ -27,6 +28,7 @@ there may be multiple ways to use the scripting api to send and recieving messag
 
 button in extension to run test, results are shown in page or extendsion dropdown
 
+may need to switch to performance.now() and only do two way connection because Date.now is not accurate enough
 
 
 
