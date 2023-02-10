@@ -1,0 +1,19 @@
+{
+  "name": "benchmark2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx gulp build-extension",
+    "test": "node launch.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gulp": "^4.0.2",
+    "gulp-replace": "^1.1.4",
+    "gulp-zip": "^5.1.0",
+    "minimist": "^1.2.7",
+    "playwright": "^1.30.0"
+  }
+}
