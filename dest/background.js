@@ -3,7 +3,7 @@ chrome.alarms.onAlarm.addListener(() => console.log(`Keep alive alarm listener: 
 
 // try to keep alive with history change listener
 chrome.webNavigation.onHistoryStateUpdated.addListener(() => console.log(`Keep alive history change listener: ${Math.random() + Math.random()}`))
-const TEST_TIME = .1 * 60 * 1000; // 1 minute
+const TEST_TIME = 1 * 60 * 1000; // 1 minute
 const TAB_COUNT = 5;
 const TestStartTime = Date.now();
 
@@ -13,6 +13,8 @@ const results = {
     averageBackgroundToContentTime: 0,
     averageContentToBackgroundTime: 0
 };
+
+//TODO: graph should be graphed by time, because right now x axis doesnt really show results accurately, graph should only be on the last tab opened, results section at the top should have the total results as well as results for each tab in a table
 
 function calculateResults() {
     let totalTwoWayTime = 0;

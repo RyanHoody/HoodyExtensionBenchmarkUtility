@@ -3,7 +3,7 @@ chrome.alarms.onAlarm.addListener(() => console.log(`Keep alive alarm listener: 
 
 // try to keep alive with history change listener
 chrome.webNavigation.onHistoryStateUpdated.addListener(() => console.log(`Keep alive history change listener: ${Math.random() + Math.random()}`))
-const TEST_TIME = .1 * 60 * 1000; // 1 minute
+const TEST_TIME = 1 * 60 * 1000; // 1 minute
 const TAB_COUNT = 5;
 const TestStartTime = Date.now();
 
