@@ -1,6 +1,5 @@
 const gulp = require("gulp");
 const replace = require("gulp-replace");
-const zip = require("gulp-zip");
 const argv = require("minimist")(process.argv.slice(2));
 
 const SETTING_TAB_COUNTS = argv.tabs || 10;
@@ -14,6 +13,5 @@ gulp.task("build-extension", () => {
         .pipe(replace('{{TAB_COUNT_PLACEHOLDER}}', SETTING_TAB_COUNTS))
         .pipe(replace('{{METHOD_PLACEHOLDER}}', SETTING_METHOD))
         .pipe(replace('{{TIME_PLACEHOLDER}}', SETTING_TIME))
-        .pipe(zip("extension.zip"))
-        .pipe(gulp.dest(`src`));
+        .pipe(gulp.dest(`dest`));
 });
