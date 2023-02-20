@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx gulp build-extension",
+    "build": "npx gulp deploy",
     "test": "node launch.js"
   },
   "author": "",
