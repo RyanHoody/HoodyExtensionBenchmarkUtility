@@ -1,9 +1,8 @@
-// //TWO
 chrome.runtime.onConnect.addListener((port) => {
     if (port.name === "benchmark") {
         port.onMessage.addListener((request) => {
-            if (request.message === 'test')
-                port.postMessage({ message: Date.now() });
+            if (request.message === 'ping')
+                port.postMessage({ message: performance.now() + performance.timeOrigin });
             else if (request.message === 'results') {
                 //results
                 console.log(request)

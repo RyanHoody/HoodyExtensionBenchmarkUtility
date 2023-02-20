@@ -33,9 +33,19 @@
 
             window.addEventListener('message', function (event) {
                 if (event.data.type === 'FROM_CONTENT_SCRIPT') {
+                    //RECEIVED TEST REULTS
                     var data = event.data.data;
                     console.log(data);
+                    //results summary
                     document.getElementById('results').textContent = JSON.stringify(event.data.summary)
+
+                    //graph the two way connection speed
+                    let XaxisStartingTime = data[0][0].startTime;
+                    data.forEach(dataset => {
+                        if (dataset[0].startTime < XaxisStartingTime) {
+                            XaxisStartingTime = dataset[0].startTime
+                        }
+                    })
 
                     var ctx = document.getElementById('myChart').getContext('2d');
                     var chart = new Chart(ctx, {
@@ -62,7 +72,7 @@
 
                         for (var i = 0; i < dataset.length; i++) {
                             twoWayTime.push(dataset[i].twoWayTime);
-                            labels.push(i);
+                            labels.push(Math.round(dataset[i].startTime - XaxisStartingTime));
                         }
 
                         chart.data.datasets.push({

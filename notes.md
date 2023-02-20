@@ -1,43 +1,57 @@
-benchmarking the commuincation between the background script and content script
+benchmarking the commuincation between the background script and content script. Each type of test must be run on it's own not all at once
 
-background script should call executeScript, which takes a function, taht function should call a function defined inside the content script,
-the function in the content script should return two values, time recieved and time sent. The results of this function are returned to executeScript as an array
-calculate one way trip and two way trip
-two way mark before executeScript is called and when it receives it's results
-one way from background
-oneway from contentscript
+Extension is inside /src
+To build (only needed if updating the background or content script)
+    npm run build
 
+build script runs the gulp file which should dynaimcally replace the variables with flags like so --tabs=10 --method=scriptingAPI --timeMinutes=2, this could be improved to build in the same command as the test itself
 
 
-when running tests keep devtools closed because it allocates more resources to extension
+Run test    
+    npm run build
 
-extension should open 10 tabs and communicate between them
 
-each extension should only send messages in one of these ways
-test ports vs scripting API vs websockets(if possible to setup), vs regular broadcast channel?
-TODO:
-Also should test the connection being initiated by the background script vs by the content script
+METHOD 1
 
-benchamrk total messages sent and recieveing in a minute
-benchmark average response time
+scripting API
 
-graph the response time over the minute, because it may start fast and slow down
-
+background script should call executeScript, which takes a function, that function should call a function defined inside the content script,
+the function in the content script should return two values, time recieved and time sent. 
 there may be multiple ways to use the scripting api to send and recieving messages, lisetener and callback function
 
+METHOD 2
 
-button in extension to run test, results are shown in page or extendsion dropdown
-
-may need to switch to performance.now() and only do two way connection because Date.now is not accurate enough
-
+postMessage
 
 
+METHOD 3 
+
+websockets
 
 
-Benchmark project outline
+IMPORTANT
+
+when running tests keep devtools closed because it allocates more resources to extension
+performance.now is not conisistent between contexts and had to be calibrated using performance.timeOrigin
+
+TODO:
+Also should test the connection being initiated by the background script vs by the content script, if this effects speed
+
+CALCULATE:
+two way mark before executeScript is called and when it receives it's results
+one way from background
+one way from contentscript
+Total messages sent and recieveing in a minute
+
+
+GRAPH:
+graph the two way response time over the testing period, right now each tab is graphed on top of eachother but these should be graphed combined, my idea is merge them by every ms and take the highest value, reducing points on the graph and showing the peak latency
+
+
+
+Old Benchmark project outline
 
 It should be a nodejs project that should be runnable with params like this:
-
 npm run test --tabs=10 --method=scriptingAPI --timeMinutes=2 --output=C:\users\asd\asd\results.log
 
 This will create a playwright instance with the extension injected using a launch option
@@ -52,19 +66,6 @@ In your extension you will have some settings variables like so:
 const SETTING_TAB_COUNTS = "{{TAB_COUNT_PLACEHOLDER}}"
 const SETTING_METHOD = "{{METHOD_PLACEHOLDER}}"
 const SETTING_TIME = "{{TIME_PLACEHOLDER}}"
-
-...
-...
-...
-
-if(SETTING_METHOD == "scriptingAPI") {
-  ...
-  ...
-}
-else if(SETTING_METHOD == "broadcastMessage") {
-      ...
-     ...
-}
 
 When we run npm run (....) your code will build that extension into a separete folder with the replaced values, and
 only them it will run puppeteer with the extension loaded.
